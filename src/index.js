@@ -41,7 +41,7 @@ const main = ({ DOM, WS }) => {
           button('.button', 'click')
         ])
       ),
-    ws: click$,
+    WS: click$,
     log: WS
   }
 }
