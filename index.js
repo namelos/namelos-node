@@ -1,26 +1,14 @@
-const express = require('express')
-const { run } = require('@cycle/core')
-const { Observable, Subject } = require('rx')
-const { of } = Observable
+const {run} = require('@cycle/core')
+const {Observable: {of}} = require('rx')
 
-const makeLogDriver = () =>
-  msg$ =>
-    msg$.subscribe(console.log)
-
-const makeServerDriver = port =>
-  sink$ =>
-    express()
-      .get('/', (req, res) =>
-        sink$.subscribe(sink =>
-          res.send(sink)))
-      .listen(port, () =>
-        console.log(`listening on ${port}...`))
+const app = require('./app')
+const {makeServerDriver, makeLogDriver} = require('./drivers')
 
 const main = () => ({
-  server: of('hello')
+  server: of('./index.html')
 })
 
 run(main, {
-  server: makeServerDriver(3000),
-  log: makeLogDriver()
+  server: makeServerDriver(app),
+  log: makeLogDriver(console)
 })
