@@ -1,46 +1,25 @@
 const { run } = require('@cycle/core')
 const { button, div, label, input, hr, h1, makeDOMDriver } = require('@cycle/dom')
 const { Observable } = require('rx')
+const { makeLogDriver, makeWebSocketDriver } = require('./drivers')
 
-const makeLogDriver = () =>
-  msg$ =>
-    msg$.subscribe(x => console.log(x))
-
-const makeWebSocketDriver = url => {
-  const ws = new WebSocket(url)
-
-  return sink$ => {
-    let $responses = Observable.create(function (observer) {
-      ws.onmessage = msg =>
-        observer.onNext(msg)
-      ws.onopen = e => console.log('connection opened')
-      ws.onerror = e => console.log(e)
-    })
-
-    sink$.subscribe(sink =>
-      ws.send(sink))
-
-    return $responses
-  }
-}
 
 const main = ({ DOM, WS }) => {
   const click$ = DOM.select('.button').events('click')
     .map(e => 'click from client')
+  const vtree$ = DOM.select('.field').events('input')
+    .map(e => e.target.value)
+    .startWith('')
+    .map(name =>
+      div([
+        input('.field', { attributes: { type: 'text' } }),
+        h1(`hello ${name}`),
+        button('.button', 'click')
+      ])
+    )
 
   return {
-    DOM: DOM.select('.field').events('input')
-      .map(e => e.target.value)
-      .startWith('')
-      .map(name =>
-        div([
-          label('Name: '),
-          input('.field', { attributes: { type: 'text' } }),
-          hr(),
-          h1('Hello, ' + name),
-          button('.button', 'click')
-        ])
-      ),
+    DOM: vtree$,
     WS: click$,
     log: WS
   }
