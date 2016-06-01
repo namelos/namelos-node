@@ -1,3 +1,8 @@
+const {Observable, Subject} = require('rx')
+
+const express = require('express')
+const webpack = require('webpack')
+const config = require('./webpack.config')
 const path = require('path')
 const url = require('url')
 const server = require('http').createServer()
@@ -7,37 +12,44 @@ const makeLogDriver = console =>
   msg$ =>
     msg$.subscribe(console.log)
 
-const makeServerDriver = app =>
+const makeServerHTTPDriver = server =>
   sink$ => {
-    app
+    const app = express()
+      .use(require('webpack-dev-middleware')(webpack(config), {
+        noInfo: true,
+        publicPath: config.output.publicPath
+      }))
+      .get('/dist', express.static('dist'))
       .get('*', (req, res) =>
         sink$.subscribe(sink =>
           res.sendFile(path.join(__dirname, sink))))
-      // .listen(app.get('port'), () =>
-      //   console.log(`listening on ${app.get('port')}...`))
-    server.on('request', app)
-    server.listen(3000, console.log('3000'))
+
+    server
+      .on('request', app)
+      .listen(3000, console.log('listening on 3000...'))
   }
 
-// const makeWSDriver = server => {
+const makeWebSocketServerDriver = server => {
   const wss = WSServer({ server })
 
-  // return sink$ => {
+  const tmp$ = new Subject()
+
+  return sink$ => {
     wss.on('connection', ws => {
-      var location = url.parse(ws.upgradeReq.url, true)
+      ws.on('message', msg =>
+        tmp$.onNext(msg))
 
-      ws.on('message', msg => {
-        console.log(`received ${msg}`)
-
-        ws.send(`received ${msg}!`)
-      })
-
-      ws.send('something')
+      sink$.subscribe(sink =>
+        ws.send(sink))
     })
-  // }
-// }
+
+    return tmp$
+  }
+}
 
 module.exports = {
+  server,
   makeLogDriver,
-  makeServerDriver
+  makeServerHTTPDriver,
+  makeWebSocketServerDriver
 }

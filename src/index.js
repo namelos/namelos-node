@@ -1,8 +1,6 @@
 const { run } = require('@cycle/core')
-const { button, div, label, input, hr, h1, makeDOMDriver } = require('@cycle/dom')
-const { Observable } = require('rx')
+const { button, div, input, p, makeDOMDriver } = require('@cycle/dom')
 const { makeLogDriver, makeWebSocketDriver } = require('./drivers')
-
 
 const main = ({ DOM, WS }) => {
   const click$ = DOM.select('.button').events('click')
@@ -12,8 +10,6 @@ const main = ({ DOM, WS }) => {
     .startWith('')
     .map(name =>
       div([
-        input('.field', { attributes: { type: 'text' } }),
-        h1(`hello ${name}`),
         button('.button', 'click')
       ])
     )

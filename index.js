@@ -1,14 +1,19 @@
 const {run} = require('@cycle/core')
 const {Observable: {of}} = require('rx')
 
-const app = require('./app')
-const {makeServerDriver, makeLogDriver} = require('./drivers')
+const {
+  makeServerHTTPDriver, makeLogDriver, makeWebSocketServerDriver,
+  app, server
+} = require('./drivers')
 
-const main = () => ({
-  server: of('./index.html')
+const main = ({ ws }) => ({
+  server: of('./index.html'),
+  ws: ws.map(ws => `a: ${ws}`),
+  log: ws
 })
 
 run(main, {
-  server: makeServerDriver(app),
-  log: makeLogDriver(console)
+  server: makeServerHTTPDriver(server),
+  log: makeLogDriver(console),
+  ws: makeWebSocketServerDriver(server)
 })

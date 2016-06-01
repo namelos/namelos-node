@@ -8,7 +8,7 @@ const makeWebSocketDriver = url => {
   const ws = new WebSocket(url)
 
   return sink$ => {
-    let $responses = Observable.create(observer => {
+    const $responses = Observable.create(observer => {
       ws.onmessage = msg =>
         observer.onNext(msg)
       ws.onopen = e =>
